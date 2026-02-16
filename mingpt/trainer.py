@@ -6,6 +6,7 @@ so nothing in this file really has anything to do with GPT specifically.
 import time
 from collections import defaultdict
 
+from networkx import config
 import torch
 from torch.utils.data.dataloader import DataLoader
 from mingpt.utils import CfgNode as CN
@@ -36,10 +37,14 @@ class Trainer:
         self.callbacks = defaultdict(list)
 
         # determine the device we'll train on
+        # 修改后的逻辑
         if config.device == 'auto':
-            self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        else:
-            self.device = config.device
+            if torch.cuda.is_available():
+                self.device = 'cuda'
+            elif torch.backends.mps.is_available():
+                self.device = 'mps'
+            else:
+                self.device = 'cpu'
         self.model = self.model.to(self.device)
         print("running on device", self.device)
 
@@ -69,7 +74,7 @@ class Trainer:
             self.train_dataset,
             sampler=torch.utils.data.RandomSampler(self.train_dataset, replacement=True, num_samples=int(1e10)),
             shuffle=False,
-            pin_memory=True,
+            pin_memory=True if self.device != 'mps' else False,
             batch_size=config.batch_size,
             num_workers=config.num_workers,
         )
