@@ -1,4 +1,4 @@
 
-### minGPT projects
+### minGPT 项目
 
-Various projects that use the minGPT library to achieve great things.
+使用 minGPT 库实现各种功能的项目。

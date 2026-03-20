@@ -1,4 +1,4 @@
 
-### adder
+### adder (加法器)
 
-Train a GPT model to add n-digit numbers
+训练一个 GPT 模型来计算 n 位数的加法

@@ -1,6 +1,6 @@
 """
-Simple training loop; Boilerplate that could apply to any arbitrary neural network,
-so nothing in this file really has anything to do with GPT specifically.
+简单的训练循环；可以应用于任何任意神经网络的样板代码，
+因此这个文件中的内容实际上与 GPT 没有特别的关系。
 """
 
 import time
@@ -16,16 +16,16 @@ class Trainer:
     @staticmethod
     def get_default_config():
         C = CN()
-        # device to train on
+        # 训练所使用的设备
         C.device = 'auto'
-        # dataloder parameters
+        # dataloder 参数
         C.num_workers = 4
-        # optimizer parameters
+        # 优化器参数
         C.max_iters = None
         C.batch_size = 64
         C.learning_rate = 3e-4
         C.betas = (0.9, 0.95)
-        C.weight_decay = 0.1 # only applied on matmul weights
+        C.weight_decay = 0.1 # 仅应用于矩阵乘法权重
         C.grad_norm_clip = 1.0
         return C
 
@@ -36,7 +36,7 @@ class Trainer:
         self.train_dataset = train_dataset
         self.callbacks = defaultdict(list)
 
-        # determine the device we'll train on
+        # 确定我们将用于训练的设备
         # 修改后的逻辑
         if config.device == 'auto':
             if torch.cuda.is_available():
@@ -48,7 +48,7 @@ class Trainer:
         self.model = self.model.to(self.device)
         print("running on device", self.device)
 
-        # variables that will be assigned to trainer class later for logging and etc
+        # 稍后将分配给 trainer 类用于日志记录等的变量
         self.iter_num = 0
         self.iter_time = 0.0
         self.iter_dt = 0.0
@@ -66,10 +66,10 @@ class Trainer:
     def run(self):
         model, config = self.model, self.config
 
-        # setup the optimizer
+        # 设置优化器
         self.optimizer = model.configure_optimizers(config)
 
-        # setup the dataloader
+        # 设置数据加载器 (dataloader)
         train_loader = DataLoader(
             self.train_dataset,
             sampler=torch.utils.data.RandomSampler(self.train_dataset, replacement=True, num_samples=int(1e10)),
@@ -85,7 +85,7 @@ class Trainer:
         data_iter = iter(train_loader)
         while True:
 
-            # fetch the next batch (x, y) and re-init iterator if needed
+            # 获取下一个批次 (x, y)，并在需要时重新初始化迭代器
             try:
                 batch = next(data_iter)
             except StopIteration:
@@ -94,10 +94,10 @@ class Trainer:
             batch = [t.to(self.device) for t in batch]
             x, y = batch
 
-            # forward the model
+            # 模型前向传播
             logits, self.loss = model(x, y)
 
-            # backprop and update the parameters
+            # 反向传播并更新参数
             model.zero_grad(set_to_none=True)
             self.loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), config.grad_norm_clip)
@@ -109,6 +109,6 @@ class Trainer:
             self.iter_dt = tnow - self.iter_time
             self.iter_time = tnow
 
-            # termination conditions
+            # 终止条件
             if config.max_iters is not None and self.iter_num >= config.max_iters:
                 break
